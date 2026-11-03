@@ -4,21 +4,34 @@
 # データベースアップグレード時のダウンタイム計測用
 #
 # 使い方:
-#   DB_HOST=xxx.rds.amazonaws.com DB_USER=admin DB_NAME=mydb ./check_aurora_connection.sh
-#   → 実行時にパスワードの入力を求められます(画面には表示されません)
+#   DB_NAME=mydb ./mysql-connect.sh
+#   → 実行時にホスト、ユーザー名、パスワードの入力を求められます
+#   → パスワードは画面に表示されません
 #
 # 停止: Ctrl+C
 
-DB_HOST="${DB_HOST:?DB_HOST を環境変数で指定してください}"
 DB_PORT="${DB_PORT:-3306}"
-DB_USER="${DB_USER:?DB_USER を環境変数で指定してください}"
 DB_NAME="${DB_NAME:-mysql}"
 INTERVAL="${INTERVAL:-1}"
 
 export TZ="Asia/Tokyo"
 
+if ! read -r -p "DB Host: " DB_HOST || [[ -z "$DB_HOST" ]]; then
+  echo "DB Host を入力してください" >&2
+  exit 1
+fi
+
+if ! read -r -p "DB User: " DB_USER || [[ -z "$DB_USER" ]]; then
+  echo "DB User を入力してください" >&2
+  exit 1
+fi
+
 # パスワードをインタラクティブに入力(画面非表示・履歴にも残らない)
-read -r -s -p "DB Password: " DB_PASS
+if ! read -r -s -p "DB Password: " DB_PASS; then
+  echo >&2
+  echo "DB Password の入力に失敗しました" >&2
+  exit 1
+fi
 echo
 export MYSQL_PWD="$DB_PASS"
 unset DB_PASS
